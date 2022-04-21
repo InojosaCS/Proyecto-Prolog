@@ -1,10 +1,10 @@
-:- discontiguous([inicial/2,final/2,movimiento/3,moverse/4,legal/2]).
+:- discontiguous([inicial/2,final/2,movimiento/3,moverse/4,legal/3]).
 
 dls(Problema,(Estado,P,Cota),Historia,[Movimiento|Movimientos]) :-
   P < Cota,
   movimiento(Problema,Estado,Movimiento),
   moverse(Problema,Estado,Movimiento,Proximo),
-  legal(Problema,Proximo),
+  legal(Problema,Historia,Proximo),
   \+ member(Proximo,Historia),
   P1 is P + 1,
   dls(Problema,(Proximo,P1,Cota),[Proximo|Historia],Movimientos).
@@ -12,9 +12,10 @@ dls(Problema,(Estado,Profundidad,Profundidad),_,[]) :- final(Problema,Estado), !
 
 iddfs(Problema,Estado,Movimientos) :- 
   iddfs(Problema,Estado,Movimientos,0).
-iddfs(Problema,Estado,Movimientos,N) :- 
+iddfs(Problema,Estado,Movimientos,N) :-
   dls(Problema,(Estado,0,N),[Estado],Movimientos), !.
-iddfs(P,E,M,N) :- N < 5, N1 is N+1, iddfs(P,E,M,N1).
+iddfs(P,E,M,N) :-
+  N1 is N+1, iddfs(P,E,M,N1).
 
 resolver(Problema,Movimientos) :- 
   inicial(Problema,Estado),
@@ -76,7 +77,7 @@ moverse(vagones,vagones(Izq,Arr,Abajo,M),pop(below,N),vagones(Nizq,Arr,Nabajo,M)
   toma(N,Abajo,Ainsertar,Nabajo),
   append(Izq,Ainsertar,Nizq).
 
-legal(vagones,_).
+legal(vagones,_,_).
 
 % Toma(N,L,X,R) Toma los N primeros elementos de L y los pone en X, y los restantes en R
 toma(0,Rs,[],Rs) :- !.
@@ -86,111 +87,43 @@ toma(N,[H|Xs],[H|Ys],Rs) :-
 
 final(vagones,vagones(Meta,_,_,Meta)).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%% EJEMPLOS PARA LA BASE DE DATOS %%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%% EJEMPLOS PARA LA BASE DE DATOS %%%%%%%%%%%%%%%%%%%%%%
-/*
- * Problema del lobo, la chivo y el repollo.
- *
- * Representaremos el Estado del problema como
- *
- *    lcr(Bote,OrillaIzquierda,OrillaDerecha)
- *
- * donde Bote indica la posición como izquierda o derecha, mientras que
- * OrillaIzquierda y OrillaDerecha son listas con atomes (lobo, chivo
- * y repollo) que indican la carga que * hay en cada orilla. Ambas
- * listas se mantendrán ordenadas según lobo < chivo < repollo.
- *
- */
-inicial(lcr,lcr(izquierda,[lobo,chivo,repollo],[])).
+%%%%%%%%%%%%%%%%%%%%%%%%%% Control Remoto %%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%% Control Remoto %%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%% Control Remoto %%%%%%%%%%%%%%%%%%%%%%
+canales(Lista,Canales,Operaciones) :-
+  Estado = canales(Lista,Canales),
+  iddfs(canales,Estado,Operaciones).
 
-final(lcr,lcr(derecha,[],[lobo,chivo,repollo])).
+movimiento(canales,canales(_,_),Movimiento) :-
+  generar_numero_tv(1,Movimiento).
 
-movimiento(lcr,lcr(izquierda,I,_),Carga) :- member(Carga,I).
-movimiento(lcr,lcr(derecha,_,D),Carga)   :- member(Carga,D).
-movimiento(lcr,lcr(_,_,_),solo).
+generar_numero_tv(Movimiento,Movimiento) :- 
+  Movimiento =< 4.
+generar_numero_tv(N,Movimiento) :-
+  N1 is N+1,
+  N1 =< 4,
+  generar_numero_tv(N1,Movimiento).
 
-moverse(lcr,lcr(B,I,D),Carga,lcr(B1,I1,D1)) :-
-   cambios_en_bote(B,B1),
-   cambios_en_orillas(Carga,B,I,D,I1,D1).
+moverse(canales,canales(Lista,Canales),Movimiento,canales(NuevaLista,Canales)) :-
+  aumentar_Nth_posicion(1,Movimiento,Canales,Lista,NuevaLista).
 
-cambios_en_bote(izquierda,derecha).        
-cambios_en_bote(derecha,izquierda).
-        
-cambios_en_orillas(solo,_,I,D,I,D).
-cambios_en_orillas(Carga,izquierda,I,D,I1,D1) :- 
-    select(Carga,I,I1), insert(Carga,D,D1).
-cambios_en_orillas(Carga,derecha,I,D,I1,D1) :- 
-    select(Carga,D,D1), insert(Carga,I,I1).
+% aumentar_Nth_posicion(1,L,N,NuevaLista) Unifica NuevaLista con 
+% la lista L salvo que el Nth elemento se le suma 1 y se le saca el mod Canales .
+aumentar_Nth_posicion(N,N,Canales,[H|T],[X|T]) :- X is H mod Canales + 1, !.
+aumentar_Nth_posicion(I,N,Canales,[H|T],[H|T1]) :- 
+  I1 is I+1, aumentar_Nth_posicion(I1,N,Canales,T,T1).
 
-insert(X,[Y|Ys],[X,Y|Ys]) :-
-    precede(X,Y).
-insert(X,[Y|Ys],[Y|Zs]) :-
-    precede(Y,X), insert(X,Ys,Zs).
-insert(X,[],[X]).
+legal(canales,[_],canales(_,_)). 
+legal(canales,[canales(H0,_),canales(H1,_)|_],canales(L,_)) :-
+  diff(H0,H1,1,N),
+  diff(H0,L,1,M),
+  M \= N.
 
-precede(lobo,_).
-precede(_,repollo).
+diff([X|_],[Y|_],I,I) :- X \= Y, !.
+diff([_|T],[_|S],I,N) :- I1 is I+1, I1 =< 4, diff(T,S,I1,N).
 
-legal(lcr,lcr(izquierda,_,D)) :- \+ peligrosa(D).
-legal(lcr,lcr(derecha,I,_))   :- \+ peligrosa(I).
+final(canales,canales(L,_)) :-
+  lista_igual(_,L).
 
-peligrosa(Orilla) :- member(lobo,Orilla), member(chivo,Orilla).
-peligrosa(Orilla) :- member(chivo,Orilla), member(repollo,Orilla).
-
-mostrar(lcr,_,[])     :- !.
-mostrar(lcr,E,[M|Ms]) :-
-  mostrar_estado(lcr,E),
-  moverse(lcr,E,M,N),
-  mostrar_movimiento(lcr,E,M), nl,
-  mostrar(lcr,N,Ms), !.
-
-mostrar_estado(lcr,lcr(_,I,D)) :-
-  write('Orilla Izquierda: '), write(I), nl,
-  write('Orilla Derecha:   '), write(D), nl. 
-
-mostrar_movimiento(lcr,lcr(B,_,_),solo) :- 
-  write(solo),nl,
-  mostrar_bote(B,solo).
-mostrar_movimiento(lcr,lcr(B,_,_),Carga) :-
-  write(Carga),nl,
-  mostrar_bote(B,Carga).
-
-mostrar_bote(Desde,Con) :-
-  opuesto(Desde,Hacia),
-  write('Desde '), write(Desde), write(' hacia '), write(Hacia),
-  write('Carga: '), write(Con), nl.
-
-opuesto(izquierda,derecha).
-opuesto(derecha,izquierda).
-
-/*
- * Problema del paseo del caballo en un tablero de ajedrez de
- * dimensiones arbitrarias.
- *
- * Representaremos el Estado del problema como
- *
- *    knight(F,C,MaxF,MaxC)
- *
- * donde F y C indican la fila y columna actual del caballo en el
- * tablero, mientras que MaxF y MaxC indican las dimensiones máximas
- * del tablero.
- *
- * Los movimientos posibles de un caballo están definidos por la lista
- * de cambios de coordenadas (en el sentido de las agujas del reloj)
- *
- * [ [2,1], [1,2], [-1,2], [-2,1], [-2,-1], [-1,-2], [1,-2], [-1,2] ]
- */
-
-inicial(knight,knight(1,1,5,10)).
-final(knight,knight(5,7,5,10)).
-
-movimiento(knight,_,Move) :-
-  member(Move, [[2,1],[1,2],[-1,2],[-2,1],[-2,-1],[-1,-2],[1,-2],[-1,2]]).
-  
-moverse(knight,knight(F,C,MaxF,MaxC),[DF,DC],knight(NF,NC,MaxF,MaxC)) :-
-  NF is F + DF,
-  NC is C + DC.
-
-legal(knight,knight(F,C,MaxF,MaxC)) :-
-  F >= 1, F =< MaxF,
-  C >= 1, C =< MaxC.
+lista_igual(_,[]).
+lista_igual(H,[H|T]) :- lista_igual(H,T).
