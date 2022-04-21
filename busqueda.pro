@@ -2,19 +2,19 @@
 
 dls(Problema,(Estado,P,Cota),Historia,[Movimiento|Movimientos]) :-
   P < Cota,
-	movimiento(Problema,Estado,Movimiento),
-	moverse(Problema,Estado,Movimiento,Proximo),
-	legal(Problema,Proximo),
-	\+ member(Proximo,Historia),
+  movimiento(Problema,Estado,Movimiento),
+  moverse(Problema,Estado,Movimiento,Proximo),
+  legal(Problema,Proximo),
+  \+ member(Proximo,Historia),
   P1 is P + 1,
-	dls(Problema,(Proximo,P1,Cota),[Proximo|Historia],Movimientos).
+  dls(Problema,(Proximo,P1,Cota),[Proximo|Historia],Movimientos).
 dls(Problema,(Estado,Profundidad,Profundidad),_,[]) :- final(Problema,Estado), !.
 
 iddfs(Problema,Estado,Movimientos) :- 
   iddfs(Problema,Estado,Movimientos,0).
 iddfs(Problema,Estado,Movimientos,N) :- 
   dls(Problema,(Estado,0,N),[Estado],Movimientos), !.
-iddfs(P,E,M,N) :- N1 is N+1, iddfs(P,E,M,N1).
+iddfs(P,E,M,N) :- N < 5, N1 is N+1, iddfs(P,E,M,N1).
 
 resolver(Problema,Movimientos) :- 
   inicial(Problema,Estado),
@@ -26,25 +26,25 @@ simular(Problema) :-
   mostrar(Problema,Estado,Movimientos).
 
 vagones(X,Meta,Operaciones) :-
-  Estado = vagones(abajo,X,[],[],Meta),
+  Estado = vagones(X,[],[],Meta),
   iddfs(vagones,Estado,Operaciones).
 
 % Push above
-movimiento(vagones,vagones(_,Izquierda,_,_,_),Movimiento) :-
+movimiento(vagones,vagones(Izquierda,_,_,_),Movimiento) :-
   length(Izquierda, N),
-  insertar_trenes(arriba,Movimiento,N).
+  insertar_trenes(above,Movimiento,N).
 % Push below
-movimiento(vagones,vagones(_,Izquierda,_,_,_),Movimiento) :-
+movimiento(vagones,vagones(Izquierda,_,_,_),Movimiento) :-
   length(Izquierda, N),
-  insertar_trenes(abajo,Movimiento,N).
+  insertar_trenes(below,Movimiento,N).
 % Pop above
-movimiento(vagones,vagones(_,Izquierda,_,_,_),Movimiento) :-
-  length(Izquierda, N),
-  quitar_trenes(arriba,Movimiento,N).
+movimiento(vagones,vagones(_,Arriba,_,_),Movimiento) :-
+  length(Arriba, N),
+  quitar_trenes(above,Movimiento,N).
 % Pop below
-movimiento(vagones,vagones(_,Izquierda,_,_,_),Movimiento) :-
-  length(Izquierda, N),
-  quitar_trenes(abajo,Movimiento,N).
+movimiento(vagones,vagones(_,_,Abajo,_),Movimiento) :-
+  length(Abajo, N),
+  quitar_trenes(below,Movimiento,N).
   
 insertar_trenes(Destino,Movimiento,N) :-
   N > 0,
@@ -59,14 +59,34 @@ quitar_trenes(Destino,Movimiento,N) :-
   N > 0, N1 is N-1,
   quitar_trenes(Destino,Movimiento,N1).
 
-toma(0,_,Ys) :- Ys = [], !.
-toma(N,[H|Xs],[H|Ys]) :-
+moverse(vagones,vagones(Izq,Arriba,Ab,M),push(above,N),vagones(Nizq,Narriba,Ab,M)) :-
+  length(Izq, LenIzq),
+  QuedanEnLaIzq is LenIzq - N,
+  toma(QuedanEnLaIzq,Izq,Nizq,Ainsertar),
+  append(Ainsertar,Arriba,Narriba).
+moverse(vagones,vagones(Izq,Arr,Abajo,M),push(below,N),vagones(Nizq,Arr,Nabajo,M)) :-
+  length(Izq, LenIzq),
+  QuedanEnLaIzq is LenIzq - N,
+  toma(QuedanEnLaIzq,Izq,Nizq,Ainsertar),
+  append(Ainsertar,Abajo,Nabajo).
+moverse(vagones,vagones(Izq,Arriba,Ab,M),pop(above,N),vagones(Nizq,Narriba,Ab,M)) :-
+  toma(N,Arriba,Ainsertar,Narriba),
+  append(Izq,Ainsertar,Nizq).
+moverse(vagones,vagones(Izq,Arr,Abajo,M),pop(below,N),vagones(Nizq,Arr,Nabajo,M)) :-
+  toma(N,Abajo,Ainsertar,Nabajo),
+  append(Izq,Ainsertar,Nizq).
+
+legal(vagones,_).
+
+% Toma(N,L,X,R) Toma los N primeros elementos de L y los pone en X, y los restantes en R
+toma(0,Rs,[],Rs) :- !.
+toma(N,[H|Xs],[H|Ys],Rs) :-
   N1 is N-1,
-  toma(N1,Xs,Ys).
+  toma(N1,Xs,Ys,Rs).
 
+final(vagones,vagones(Meta,_,_,Meta)).
 
-final(vagones,vagones(_,Meta,_,_,Meta)).
-
+%%%%%%%%%%%%%%%%%%%%%%%%%% EJEMPLOS PARA LA BASE DE DATOS %%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%% EJEMPLOS PARA LA BASE DE DATOS %%%%%%%%%%%%%%%%%%%%%%
 /*
  * Problema del lobo, la chivo y el repollo.
