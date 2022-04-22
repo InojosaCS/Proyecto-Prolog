@@ -23,7 +23,7 @@ simular(Problema) :-
   iddfs(Problema,Estado,Movimientos),
   mostrar(Problema,Estado,Movimientos).
 
-inicial(vagones,vagones([a,b,c],[],[],[b,c,a])).
+inicial(vagones,vagones([a,b,c],[],[],[b,a,c])).
 inicial(canales,canales([3,1,3,3],5)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -80,7 +80,7 @@ moverse(vagones,vagones(Izq,Arriba,Ab,M),pop(above,N),vagones(Nizq,Narriba,Ab,M)
 moverse(vagones,vagones(Izq,Arr,Abajo,M),pop(below,N),vagones(Nizq,Arr,Nabajo,M)) :-
   toma(N,Abajo,Ainsertar,Nabajo), append(Izq,Ainsertar,Nizq).
 
-% Cómo se busca la menor cantidad de paso, no se debe hacer _(above,_) luego 
+% Cómo se busca la menor cantidad de pasos, no se debe hacer _(above,_) luego 
 % de  un _(above,_), de igual forma tampoco un _(below,_) seguido de un _(below,_)
 legal(vagones,[_],_).
 legal(vagones,[H1,H2|_],H0) :-
@@ -89,8 +89,8 @@ legal(vagones,[H1,H2|_],H0) :-
   X \= Y.
 
 % Detecta dónde hubo un cambio entre dos estados de vagones (arriba o abajo)
-cambio(vagones(_,Arriba,_,_),vagones(_,Arriba1,_,_),arriba) :- Arriba \= Arriba1, !.
-cambio(vagones(_,_,Abajo,_),vagones(_,_,Abajo1,_),abajo) :- Abajo \= Abajo1, !.
+cambio(vagones(_,Arriba,Ab,_),vagones(_,Arriba1,Ab,_),arriba) :- Arriba \= Arriba1, !.
+cambio(vagones(_,Ar,Abajo,_),vagones(_,Ar,Abajo1,_),abajo) :- Abajo \= Abajo1, !.
 
 final(vagones,vagones(Meta,_,_,Meta)).
 
@@ -98,7 +98,8 @@ mostrar(vagones,vagones(Izq,Arriba,Abajo,Meta),Movimientos) :-
   length(Izq, N0),
   N is N0 * 2 + 7,
   write('Llegada del tren, por la base de la "Y".'), nl,
-  mostrar(vagones,vagones(Izq,Arriba,Abajo,Meta),Movimientos,N),!.
+  mostrar(vagones,vagones(Izq,Arriba,Abajo,Meta),Movimientos,N),
+  write('El tren tiene la permutación deseada.'),!.
 mostrar(vagones,vagones(Izq,Arriba,Abajo,_),[],Aux) :- 
   imprime_vagones(Izq,Arriba,Abajo,Aux),!.
 mostrar(vagones,vagones(Izq,Arriba,Ab,M),[push(above,N)|T],Aux) :-
@@ -168,12 +169,7 @@ put(N,T) :- write(T), N1 is N-1, put(N1,T).
 canales(Lista,Canales,Operaciones) :-
   iddfs(canales,canales(Lista,Canales),Operaciones).
 
-movimiento(canales,canales(_,_),Movimiento) :- generar_numero_tv(1,Movimiento).
-
-generar_numero_tv(Movimiento,Movimiento).
-generar_numero_tv(N,Movimiento) :-
-  N1 is N+1, N1 =< 4,
-  generar_numero_tv(N1,Movimiento).
+movimiento(canales,canales(_,_),Movimiento) :- select(Movimiento,[1,2,3,4],_).
 
 moverse(canales,canales(Lista,Canales),Movimiento,canales(NuevaLista,Canales)) :-
   aumentar_Nth_posicion(1,Movimiento,Canales,Lista,NuevaLista).
