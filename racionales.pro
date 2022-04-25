@@ -55,7 +55,7 @@ process(R, A + B) :- process(A1, A), process(B1, B), addr(A1, B1, R), !.
 process(R, A - B) :- process(A1, A), process(B1, B), subr(A1, B1, R), !.
 process(R, A * B) :- process(A1, A), process(B1, B), mulr(A1, B1, R), !.
 process(R, A / B) :- process(A1, A), process(B1, B), divr(A1, B1, R), !.
-process(R, -A) :- process(A1, A), invr(A1, R), !.
+process(R, ~A) :- process(A1, A), invr(A1, R), !.
 process(R, R) :- !.
 
 isr(R, X) :- process(R1, X), simplify(R1, R), !.
