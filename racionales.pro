@@ -1,5 +1,6 @@
 :- op(100, xfx, \\).
 :- op(700, xfx, isr).
+:- op(199, xfx, ~).
 
 A \\ B :- integer(A), integer(B).
 
@@ -31,6 +32,7 @@ subr(A, B, R) :- B1 is -B, addr(A, B1, R), !.
 invr(not_a_number, not_a_number) :- !.
 invr(infinity, infinity) :- !.
 invr(0, infinity) :- !.
+invr(0 \\ _, infinity) :- !.
 invr(A \\ B, B \\ A) :- !.
 invr(X, 1 \\ X) :- !.
 
