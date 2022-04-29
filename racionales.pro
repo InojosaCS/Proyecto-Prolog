@@ -1,6 +1,6 @@
 :- op(100, xfx, \\).
 :- op(700, xfx, isr).
-:- op(199, xfx, ~).
+:- op(199, fy, ~).
 
 A \\ B :- integer(A), integer(B).
 
@@ -62,11 +62,3 @@ process(R, R) :- !.
 
 isr(R, X) :- process(R1, X), simplify(R1, R), !.
 
-% isr(not_a_number, 0 \\ 0) :- !.
-% isr(infinity, _ \\ 0) :- !.
-% isr(R, A + B) :- isr(A1, A), isr(B1, B), addr(A1, B1, R1), simplify(R1, R), !.
-% isr(R, A - B) :- isr(A1, A), isr(B1, B), subr(A1, B1, R1), simplify(R1, R), !.
-% isr(R, A * B) :- isr(A1, A), isr(B1, B), mulr(A1, B1, R1), simplify(R1, R), !.
-% isr(R, A / B) :- isr(A1, A), isr(B1, B), divr(A1, B1, R1), simplify(R1, R), !.
-% isr(R, -A) :- isr(A1, A), invr(A1, R1), simplify(R1, R), !.
-% isr(R, A) :- simplify(A, R), !.

@@ -34,6 +34,7 @@ solve(F, Vars, Vals, R) :- getvars(F, Vars), length(Vars, N), getvalues(N, Vals)
 truthtable :-
     repeat,
     write('formula: '),
+    flush_output,
     read(F),
     truthtable(F).
 

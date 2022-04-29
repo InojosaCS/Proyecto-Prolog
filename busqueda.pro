@@ -23,9 +23,6 @@ simular(Problema) :-
   iddfs(Problema,Estado,Movimientos),
   mostrar(Problema,Estado,Movimientos).
 
-inicial(vagones,vagones([a,b,c],[],[],[b,a,c])).
-inicial(canales,canales([3,1,3,3],5)).
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%% Patio de Operaciones %%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -36,6 +33,14 @@ inicial(canales,canales([3,1,3,3],5)).
 % Meta: Es la permutación de vagones que queremos lograr
 vagones(X,Meta,Operaciones) :-
   iddfs(vagones,vagones(X,[],[],Meta),Operaciones).
+
+% Para representar un estado inicial de vagones siga el siguiente formato:
+% vagones([lista actual],[],[],[Lista deseada])
+inicial(vagones,vagones([a,b,c],[],[],[b,c,a])).
+
+% Para representar un estado final de vagones siga el siguiente formato:
+% vagones([lista deseada],[],[],[Lista deseada])
+final(vagones,vagones(Meta,_,_,Meta)).
 
 % Push above
 movimiento(vagones,vagones(Izquierda,_,_,_),Movimiento) :-
@@ -82,6 +87,7 @@ moverse(vagones,vagones(Izq,Arr,Abajo,M),pop(below,N),vagones(Nizq,Arr,Nabajo,M)
 
 % Cómo se busca la menor cantidad de pasos, no se debe hacer _(above,_) luego 
 % de  un _(above,_), de igual forma tampoco un _(below,_) seguido de un _(below,_)
+% mas que legal, es una optimizacion, en caso de querer solo legal poner legal(vagones,_,_)
 legal(vagones,[_],_).
 legal(vagones,[H1,H2|_],H0) :-
   cambio(H1,H2,X),
@@ -91,8 +97,6 @@ legal(vagones,[H1,H2|_],H0) :-
 % Detecta dónde hubo un cambio entre dos estados de vagones (arriba o abajo)
 cambio(vagones(_,Arriba,Ab,_),vagones(_,Arriba1,Ab,_),arriba) :- Arriba \= Arriba1, !.
 cambio(vagones(_,Ar,Abajo,_),vagones(_,Ar,Abajo1,_),abajo) :- Abajo \= Abajo1, !.
-
-final(vagones,vagones(Meta,_,_,Meta)).
 
 mostrar(vagones,vagones(Izq,Arriba,Abajo,Meta),Movimientos) :-
   length(Izq, N0),
@@ -166,8 +170,16 @@ put(N,T) :- write(T), N1 is N-1, put(N1,T).
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%     Control Remoto    %%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Estado: canales(Lista,NroDeCanales). 
+% Dónde lista son los canales en los que se encuentra cada TV
+% NroDeCanales es el número de canales que tiene el televisor. 
 canales(Lista,Canales,Operaciones) :-
   iddfs(canales,canales(Lista,Canales),Operaciones).
+
+% Para representar el estado inicial siga el siguiente formato:
+% canales(Lista,NroDeCanales). Dónde lista son los canales iniciales de los TVs 
+inicial(canales,canales([3,1,3,3],5)).
+final(canales,canales(L,_)) :- lista_igual(_,L).
 
 movimiento(canales,canales(_,_),Movimiento) :- select(Movimiento,[1,2,3,4],_).
 
@@ -175,23 +187,21 @@ moverse(canales,canales(Lista,Canales),Movimiento,canales(NuevaLista,Canales)) :
   aumentar_Nth_posicion(1,Movimiento,Canales,Lista,NuevaLista).
 
 % aumentar_Nth_posicion(1,L,N,NuevaLista) Unifica NuevaLista con 
-% la lista L salvo que el Nth elemento se le suma 1 y se le saca el mod Canales .
+% la lista L salvo que el Nth elemento se le saca el mod Canales y se le suma 1.
 aumentar_Nth_posicion(N,N,Canales,[H|T],[X|T]) :- X is H mod Canales + 1, !.
 aumentar_Nth_posicion(I,N,Canales,[H|T],[H|T1]) :- 
   I1 is I+1, aumentar_Nth_posicion(I1,N,Canales,T,T1).
+
+diff([X|_],[Y|_],I,I) :- X \= Y, !.
+diff([_|T],[_|S],I,N) :- I1 is I+1, I1 =< 4, diff(T,S,I1,N).
+
+lista_igual(_,[]).
+lista_igual(H,[H|T]) :- lista_igual(H,T).
 
 legal(canales,[_],canales(_,_)). 
 legal(canales,[canales(H0,_),canales(H1,_)|_],canales(L,_)) :-
   diff(H0,H1,1,N), diff(H0,L,1,M),
   M \= N.
-
-diff([X|_],[Y|_],I,I) :- X \= Y, !.
-diff([_|T],[_|S],I,N) :- I1 is I+1, I1 =< 4, diff(T,S,I1,N).
-
-final(canales,canales(L,_)) :- lista_igual(_,L).
-
-lista_igual(_,[]).
-lista_igual(H,[H|T]) :- lista_igual(H,T).
 
 mostrar(canales,canales([L1|_],_),[]) :- 
   write('Y finalmente todos los televisores quedan sintonizando el canal '),
